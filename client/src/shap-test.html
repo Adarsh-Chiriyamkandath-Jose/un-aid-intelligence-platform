@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SHAP Test - Direct API Call</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        button { padding: 15px 30px; font-size: 16px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
+        .shap-btn { background: #28a745; color: white; }
+        .shap-btn:hover { background: #218838; }
+        .results { margin-top: 20px; }
+        .explanation { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #007bff; }
+        .impact-positive { color: #28a745; font-weight: bold; }
+        .impact-negative { color: #dc3545; font-weight: bold; }
+        .loading { text-align: center; color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 SHAP Analysis Test</h1>
+        <p>This page directly tests the SHAP backend API to verify it works independently of React component issues.</p>
+        
+        <h3>Select Country:</h3>
+        <select id="countrySelect">
+            <option value="Ethiopia">Ethiopia</option>
+            <option value="India">India</option>
+            <option value="Bangladesh">Bangladesh</option>
+            <option value="Kenya">Kenya</option>
+            <option value="Tanzania">Tanzania</option>
+            <option value="Philippines">Philippines</option>
+        </select>
+        
+        <br><br>
+        <button class="shap-btn" onclick="generateSHAP()">🚀 Generate SHAP Explanations</button>
+        <button onclick="testSimple()" style="background: #dc3545; color: white; padding: 15px 30px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; margin: 10px;">🔧 Simple Test</button>
+        
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        async function generateSHAP() {
+            const country = document.getElementById('countrySelect').value;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = '<div class="loading">🔄 Generating SHAP analysis for ' + country + '...</div>';
+            
+            try {
+                console.log('🎯 Testing SHAP API for:', country);
+                
+                const response = await fetch('/api/forecasting/shap-explanations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        country: country,
+                        model: 'hybrid'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ SHAP data received:', data);
+                
+                let html = `
+                    <h3>✅ SHAP Analysis Results for ${data.country}</h3>
+                    <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                        <strong>Model Prediction:</strong> $${(data.model_prediction / 1000).toFixed(1)}K USD<br>
+                        <strong>Base Value:</strong> $${(data.base_value / 1000).toFixed(1)}K USD
+                    </div>
+                    <h4>Feature Impact Analysis:</h4>
+                `;
+                
+                data.explanations.forEach(exp => {
+                    const impactClass = exp.impact > 0 ? 'impact-positive' : 'impact-negative';
+                    const impactSign = exp.impact > 0 ? '+' : '';
+                    
+                    html += `
+                        <div class="explanation">
+                            <strong>${exp.feature}</strong> 
+                            <span class="${impactClass}">${impactSign}${exp.impact.toFixed(3)}</span>
+                            <br>
+                            <small>${exp.description}</small>
+                            <br>
+                            <em>Category: ${exp.category}</em>
+                        </div>
+                    `;
+                });
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('❌ SHAP failed:', error);
+                resultsDiv.innerHTML = `
+                    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                        <strong>❌ Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function testSimple() {
+            alert('Button click works! Now testing SHAP API...');
+            fetch('/api/forecasting/shap-explanations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ country: 'Ethiopia', model: 'hybrid' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('SHAP Test Result:', data);
+                document.getElementById('results').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                console.error('SHAP Test Error:', error);
+                document.getElementById('results').innerHTML = 'Error: ' + error.message;
+            });
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            console.log('🔥 SHAP Test Page Loaded - Ready to test API');
+            document.getElementById('results').innerHTML = '<p>Page loaded successfully. Click buttons to test SHAP API.</p>';
+        };
+    </script>
+</body>
+</html>

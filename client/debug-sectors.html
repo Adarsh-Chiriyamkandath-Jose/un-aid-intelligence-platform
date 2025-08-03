@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sector API Debug</title>
+</head>
+<body>
+    <h1>Sector API Test</h1>
+    <div id="results"></div>
+    <script>
+        async function testAPI() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Test the working API endpoint
+                const response = await fetch('/api/sectors/');
+                const data = await response.json();
+                
+                results.innerHTML = `
+                    <h2>✅ API Working</h2>
+                    <p>Status: ${response.status}</p>
+                    <p>Total sectors: ${data.length}</p>
+                    <p>Sample sectors:</p>
+                    <ul>
+                        ${data.slice(0, 10).map(s => `<li>${s.displayName} (${s.name})</li>`).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                results.innerHTML = `<h2>❌ Error</h2><p>${error.message}</p>`;
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>
