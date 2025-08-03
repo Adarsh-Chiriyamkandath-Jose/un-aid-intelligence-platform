@@ -1,6 +1,6 @@
 # 🌍 UN Aid Intelligence Platform
 
-An AI-powered web application for analyzing, forecasting, and understanding international development aid flows. Built using FastAPI, React, and machine learning, the platform visualizes ODA trends with real UN datasets (2015–2024) and offers interactive dashboards, forecasts, and AI-assisted queries.
+An AI-powered web application for analyzing, forecasting, and understanding international development aid flows. Built using FastAPI, React, and machine learning, the platform visualizes ODA trends with real UN datasets (2015–2023) and offers interactive dashboards, forecasts, and AI-assisted queries.
 
 ---
 
