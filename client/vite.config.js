@@ -6,7 +6,7 @@ import react from "@vitejs/plugin-react";
 // - Output Directory: dist
 
 export default defineConfig({
-  root: ".", // Explicitly set client as root (not needed if running in client/)
+  root: ".", // Explicitly set client as root (config is inside client/)
   plugins: [
     react(),
     // Optional: only enable Replit-specific plugins if running on Replit
