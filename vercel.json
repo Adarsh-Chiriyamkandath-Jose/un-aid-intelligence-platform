@@ -3,6 +3,7 @@
   "buildCommand": "npm run build:client",
   "outputDirectory": "client/dist",
   "rewrites": [
+    { "source": "/api/:path*", "destination": "https://un-aid-intelligence-platform-api.onrender.com/api/:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
