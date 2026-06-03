@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useAidData } from "@/hooks/use-aid-data";
 import WorldMap from "@/components/map/WorldMap";
 import AidChart from "@/components/charts/AidChart";
@@ -11,6 +10,7 @@ import ForecastingPanel from "@/components/forecasting/ForecastingPanel";
 import { CompactExportButtons } from "@/components/export/CompactExportButtons";
 import {
   TrendingUp,
+  TrendingDown,
   Globe,
   DollarSign,
   Activity,
@@ -20,7 +20,76 @@ import {
   MessageSquare,
   Brain,
   Building,
+  ArrowUpRight,
 } from "lucide-react";
+
+const NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+  { id: "map", label: "World Map", icon: Map },
+  { id: "forecasting", label: "AI Forecasting", icon: Brain },
+  { id: "chat", label: "AI Assistant", icon: MessageSquare },
+] as const;
+
+const TINT: Record<string, string> = {
+  blue: "bg-blue-50 text-blue-600 ring-blue-100",
+  sky: "bg-sky-50 text-sky-600 ring-sky-100",
+  emerald: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+  violet: "bg-violet-50 text-violet-600 ring-violet-100",
+};
+
+function DeltaPill({
+  tone,
+  children,
+}: {
+  tone: "up" | "down" | "neutral";
+  children: React.ReactNode;
+}) {
+  const styles = {
+    up: "text-emerald-700 bg-emerald-50 ring-emerald-100",
+    down: "text-amber-700 bg-amber-50 ring-amber-100",
+    neutral: "text-slate-600 bg-slate-100 ring-slate-200",
+  }[tone];
+  const Icon = tone === "up" ? TrendingUp : tone === "down" ? TrendingDown : Activity;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${styles}`}
+    >
+      <Icon className="h-3 w-3" />
+      {children}
+    </span>
+  );
+}
+
+function PageHeader({
+  eyebrow,
+  title,
+  description,
+  icon: Icon,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  return (
+    <div className="flex items-start gap-4">
+      <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 sm:flex">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="eyebrow">{eyebrow}</p>
+        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+          {title}
+        </h2>
+        {description && (
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            {description}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { stats, isLoading, error } = useAidData();
@@ -28,17 +97,17 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md mx-4">
+      <div className="app-canvas flex min-h-screen items-center justify-center px-4">
+        <Card className="max-w-md">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-red-500 mb-4">
-                <Activity className="h-8 w-8 mx-auto" />
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-500">
+                <Activity className="h-6 w-6" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="mb-2 text-lg font-semibold text-foreground">
                 Unable to Load Data
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {error instanceof Error
                   ? error.message
                   : "An error occurred while loading aid data"}
@@ -50,87 +119,118 @@ export default function Dashboard() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-      {/* Animated Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 opacity-5 animate-gradient-shift -z-10" />
+  const metrics = [
+    {
+      label: "Total Aid · 2015–2023",
+      value: isLoading ? "—" : stats?.total_aid || "$0",
+      icon: DollarSign,
+      tint: "blue",
+      delta: "+12.4%",
+      tone: "up" as const,
+      sub: "vs. prior period",
+    },
+    {
+      label: "Recipient Countries",
+      value: isLoading ? "—" : String(stats?.countries_count ?? "0"),
+      icon: Globe,
+      tint: "sky",
+      delta: "+5",
+      tone: "up" as const,
+      sub: "added in 2023",
+    },
+    {
+      label: "Active Donors",
+      value: isLoading ? "—" : String(stats?.active_donors ?? "0"),
+      icon: Users,
+      tint: "emerald",
+      delta: "−3",
+      tone: "down" as const,
+      sub: "vs. 2022",
+    },
+    {
+      label: "Forecast Accuracy",
+      value: "91.8%",
+      icon: Brain,
+      tint: "violet",
+      delta: "Prophet + XGBoost",
+      tone: "neutral" as const,
+      sub: "ensemble model",
+    },
+  ];
 
-      {/* Header */}
-      <header className="glassmorphism sticky top-0 z-50 border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-700 rounded-lg flex items-center justify-center">
-                <Globe className="h-6 w-6 text-white" />
+  return (
+    <div className="app-canvas min-h-screen">
+      {/* App bar */}
+      <header className="sticky top-0 z-50 border-b border-border bg-card/85 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between gap-4">
+            {/* Brand */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+                <Globe className="h-5 w-5" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">
-                  UN Aid Intelligence Platform
+              <div className="leading-tight">
+                <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
+                  UN Aid Intelligence
                 </h1>
-                <p className="text-xs text-gray-600">
-                  AI-Powered Development Analytics
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  Development Finance Platform
                 </p>
               </div>
             </div>
 
-            <nav className="hidden md:flex items-center space-x-6">
-              <Button
-                variant={activeTab === "dashboard" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveTab("dashboard")}
-                className="gap-2"
-              >
-                <BarChart3 className="h-4 w-4" />
-                Dashboard
-              </Button>
-              <Button
-                variant={activeTab === "map" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveTab("map")}
-                className="gap-2"
-              >
-                <Map className="h-4 w-4" />
-                World Map
-              </Button>
-              <Button
-                variant={activeTab === "forecasting" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveTab("forecasting")}
-                className="gap-2"
-              >
-                <Brain className="h-4 w-4" />
-                AI Forecasting
-              </Button>
-              <Button
-                variant={activeTab === "chat" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveTab("chat")}
-                className="gap-2"
-              >
-                <MessageSquare className="h-4 w-4" />
-                AI Assistant
-              </Button>
+            {/* Desktop nav */}
+            <nav className="nav-seg hidden lg:flex">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    data-active={activeTab === item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className="nav-seg-item"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </button>
+                );
+              })}
             </nav>
 
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              </div>
-              <span className="text-sm text-gray-600 hidden sm:block">
-                Real-time Data
+            {/* Status */}
+            <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
+              <span className="status-dot" />
+              <span className="hidden text-xs font-medium text-muted-foreground sm:block">
+                Live data
               </span>
             </div>
           </div>
+
+          {/* Mobile / tablet nav */}
+          <nav className="nav-seg mb-3 flex w-full overflow-x-auto lg:hidden">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  data-active={activeTab === item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className="nav-seg-item flex-1 justify-center"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
+      {/* Main */}
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <TabsList className="hidden">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="map">Map</TabsTrigger>
@@ -138,112 +238,63 @@ export default function Dashboard() {
             <TabsTrigger value="chat">Chat</TabsTrigger>
           </TabsList>
 
-          {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
-            {/* Key Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="glassmorphism hover:shadow-xl transition-all duration-300 animate-float">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                      <DollarSign className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-800">
-                        {isLoading ? "..." : stats?.total_aid || "$0"}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Total Aid (2015-2023)
-                      </p>{" "}
-                      {/* Updated to 2023 */}
-                    </div>
-                  </div>
-                  <div className="flex items-center text-green-600 text-sm">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    <span>+12.4% vs 2023</span>
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Dashboard */}
+          <TabsContent value="dashboard" className="space-y-8">
+            <PageHeader
+              eyebrow="Overview"
+              title="Global Aid Intelligence"
+              description="A consolidated view of international development finance flows, recipients, and donors drawn from UN aid data, 2015–2023."
+              icon={BarChart3}
+            />
 
-              <Card
-                className="glassmorphism hover:shadow-xl transition-all duration-300 animate-float"
-                style={{ animationDelay: "0.2s" }}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center">
-                      <Globe className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-800">
-                        {isLoading ? "..." : stats?.countries_count || "0"}
+            {/* Metrics */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {metrics.map((m, i) => {
+                const Icon = m.icon;
+                return (
+                  <Card
+                    key={m.label}
+                    className="animate-rise transition-shadow hover:shadow-md"
+                    style={{ animationDelay: `${i * 70}ms` }}
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between">
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-xl ring-1 ${TINT[m.tint]}`}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <DeltaPill tone={m.tone}>{m.delta}</DeltaPill>
+                      </div>
+                      <p className="mt-4 stat-num text-3xl font-semibold text-foreground">
+                        {m.value}
                       </p>
-                      <p className="text-sm text-gray-600">
-                        Recipient Countries
+                      <p className="mt-1 text-sm font-medium text-muted-foreground">
+                        {m.label}
                       </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center text-green-600 text-sm">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    <span>5 new in 2023</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="glassmorphism hover:shadow-xl transition-all duration-300 animate-float"
-                style={{ animationDelay: "0.4s" }}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
-                      <Users className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-800">
-                        {isLoading ? "..." : stats?.active_donors || "0"}
+                      <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+                        {m.sub}
                       </p>
-                      <p className="text-sm text-gray-600">Active Donors</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center text-orange-600 text-sm">
-                    <Activity className="h-4 w-4 mr-1" />
-                    <span>-3 vs 2023</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="glassmorphism hover:shadow-xl transition-all duration-300 animate-float"
-                style={{ animationDelay: "0.6s" }}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-                      <Brain className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-800">91.8%</p>
-                      <p className="text-sm text-gray-600">AI Accuracy</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center text-green-600 text-sm">
-                    <Activity className="h-4 w-4 mr-1" />
-                    <span>Prophet + XGBoost</span>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="glassmorphism">
+            {/* Charts */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Global Aid Trends</CardTitle>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="eyebrow">Trend</p>
+                      <CardTitle className="mt-1 text-lg">
+                        Global Aid Flows
+                      </CardTitle>
+                    </div>
                     <div className="flex items-center gap-3">
                       <CompactExportButtons />
-                      <div className="flex gap-2">
+                      <div className="hidden gap-2 sm:flex">
                         <Badge variant="default">Annual</Badge>
                         <Badge variant="outline">Quarterly</Badge>
                       </div>
@@ -260,9 +311,10 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="glassmorphism">
+              <Card>
                 <CardHeader>
-                  <CardTitle>Aid by Sector</CardTitle>
+                  <p className="eyebrow">Composition</p>
+                  <CardTitle className="mt-1 text-lg">Aid by Sector</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <AidChart
@@ -275,223 +327,206 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Aid Flow Analysis - Multiple insights in one section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Top Aid Recipients */}
-              <div className="lg:col-span-1">
-                <Card className="glassmorphism">
+            {/* Rankings */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <Card>
                 <CardHeader>
-                  <CardTitle>Top Aid Recipients (2015-2023)</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Countries by total cumulative aid received
+                  <p className="eyebrow">Recipients</p>
+                  <CardTitle className="mt-1 text-lg">
+                    Top Aid Recipients
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Countries by total cumulative aid received, 2015–2023
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {stats?.top_recipients
-                      ?.slice(0, 6)
-                      .map((country, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-3 bg-white/50 rounded-lg border hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                {index + 1}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-800 text-sm">
-                                {country.name}
-                              </p>
-                              <p className="text-xs text-gray-600">
-                                {country.region}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-gray-800 text-sm">
-                              {country.amount}
-                            </p>
-                            <div className="w-16 h-1.5 bg-gray-200 rounded-full mt-1">
-                              <div
-                                className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-                                style={{
-                                  width: `${Math.max(20, 100 - index * 12)}%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )) || (
-                      <div className="text-center py-8">
-                        <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-600">Loading recipients...</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-                </Card>
-              </div>
-
-              {/* Top Donors */}
-              <div className="lg:col-span-1">
-                <Card className="glassmorphism">
-                <CardHeader>
-                  <CardTitle>Top Aid Donors (2015-2023)</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Organizations by total aid contributed
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {stats?.top_donors?.slice(0, 6).map((donor, index) => (
+                  <div className="space-y-1">
+                    {stats?.top_recipients?.slice(0, 6).map((country, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-3 bg-white/50 rounded-lg border hover:shadow-md transition-shadow"
+                        className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-secondary/60"
                       >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">
-                              {index + 1}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-800 text-sm">
-                              {donor.name}
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary text-xs font-semibold text-primary">
+                            {index + 1}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {country.name}
                             </p>
-                            <p className="text-xs text-gray-600 capitalize">
-                              {donor.type}
+                            <p className="text-xs text-muted-foreground">
+                              {country.region}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-gray-800 text-sm">
-                            {donor.amount}
+                          <p className="stat-num text-sm font-semibold text-foreground">
+                            {country.amount}
                           </p>
-                          <div className="w-16 h-1.5 bg-gray-200 rounded-full mt-1">
+                          <div className="mt-1 h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
                             <div
-                              className="h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full"
-                              style={{
-                                width: `${Math.max(20, 100 - index * 12)}%`,
-                              }}
+                              className="h-full rounded-full bg-primary"
+                              style={{ width: `${Math.max(18, 100 - index * 13)}%` }}
                             />
                           </div>
                         </div>
                       </div>
                     )) || (
-                      <div className="text-center py-8">
-                        <Building className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-600">Loading donors...</p>
+                      <div className="py-10 text-center">
+                        <Users className="mx-auto mb-2 h-7 w-7 text-muted-foreground/60" />
+                        <p className="text-sm text-muted-foreground">
+                          Loading recipients…
+                        </p>
                       </div>
                     )}
                   </div>
                 </CardContent>
-                </Card>
-              </div>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <p className="eyebrow">Donors</p>
+                  <CardTitle className="mt-1 text-lg">Top Aid Donors</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Organizations by total aid contributed, 2015–2023
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1">
+                    {stats?.top_donors?.slice(0, 6).map((donor, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-secondary/60"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary text-xs font-semibold text-emerald-600">
+                            {index + 1}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {donor.name}
+                            </p>
+                            <p className="text-xs capitalize text-muted-foreground">
+                              {donor.type}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="stat-num text-sm font-semibold text-foreground">
+                            {donor.amount}
+                          </p>
+                          <div className="mt-1 h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
+                            <div
+                              className="h-full rounded-full bg-emerald-500"
+                              style={{ width: `${Math.max(18, 100 - index * 13)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )) || (
+                      <div className="py-10 text-center">
+                        <Building className="mx-auto mb-2 h-7 w-7 text-muted-foreground/60" />
+                        <p className="text-sm text-muted-foreground">
+                          Loading donors…
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
-          {/* World Map Tab */}
-          <TabsContent value="map">
+          {/* World Map */}
+          <TabsContent value="map" className="space-y-8">
+            <PageHeader
+              eyebrow="Geospatial"
+              title="World Map"
+              description="Explore the geographic distribution of aid flows. Filter by year, sector, and donor to reveal regional concentration."
+              icon={Map}
+            />
             <WorldMap />
           </TabsContent>
 
-          {/* AI Forecasting Tab */}
-          <TabsContent value="forecasting">
+          {/* Forecasting */}
+          <TabsContent value="forecasting" className="space-y-8">
+            <PageHeader
+              eyebrow="Predictive Analytics"
+              title="AI Forecasting"
+              description="Project future aid flows with an ensemble of Prophet and XGBoost models, complete with confidence intervals and SHAP explainability."
+              icon={Brain}
+            />
             <ForecastingPanel />
           </TabsContent>
 
-          {/* AI Chat Tab */}
-          <TabsContent value="chat">
+          {/* Assistant */}
+          <TabsContent value="chat" className="space-y-8">
+            <PageHeader
+              eyebrow="Conversational AI"
+              title="AI Assistant"
+              description="Ask questions in natural language and get grounded insights from UN aid data, 2015–2023."
+              icon={MessageSquare}
+            />
             <ChatInterface />
           </TabsContent>
         </Tabs>
       </main>
 
       {/* Footer */}
-      <footer className="glassmorphism mt-12 border-t border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <footer className="mt-12 border-t border-border bg-card">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             <div className="md:col-span-2">
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-700 rounded-lg flex items-center justify-center">
-                  <Globe className="h-6 w-6 text-white" />
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Globe className="h-5 w-5" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">
+                <div className="leading-tight">
+                  <h3 className="text-sm font-semibold text-foreground">
                     UN Aid Intelligence Platform
                   </h3>
-                  <p className="text-sm text-gray-600">
-                    Powered by AI for Global Development
+                  <p className="text-xs text-muted-foreground">
+                    AI for global development
                   </p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Advanced analytics platform leveraging real UN aid data
-                (2015-2023) with AI-powered forecasting and conversational
-                intelligence for informed development decision-making.
+              <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+                An analytics platform leveraging real UN aid data (2015–2023)
+                with AI-powered forecasting and conversational intelligence for
+                informed development decision-making.
               </p>
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-800 mb-3">
-                Technology Stack
-              </h4>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li className="flex items-center">
-                  <Activity className="h-3 w-3 mr-2" />
-                  React + TypeScript
-                </li>
-                <li className="flex items-center">
-                  <Activity className="h-3 w-3 mr-2" />
-                  FastAPI + PostgreSQL
-                </li>
-                <li className="flex items-center">
-                  <Brain className="h-3 w-3 mr-2" />
-                  OpenAI GPT-4o
-                </li>
-                <li className="flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-2" />
-                  Prophet + XGBoost
-                </li>
-                <li className="flex items-center">
-                  <Activity className="h-3 w-3 mr-2" />
-                  LangChain + SHAP
-                </li>
+              <p className="eyebrow mb-3">Technology</p>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>React · TypeScript</li>
+                <li>FastAPI · PostgreSQL</li>
+                <li>OpenAI GPT-4o</li>
+                <li>Prophet · XGBoost · SHAP</li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-800 mb-3">Data Sources</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li className="flex items-center">
-                  <BarChart3 className="h-3 w-3 mr-2" />
-                  UN Aid Dataset 2015-2023
-                </li>
-                <li className="flex items-center">
-                  <Globe className="h-3 w-3 mr-2" />
-                  World Bank Indicators
-                </li>
-                <li className="flex items-center">
-                  <Activity className="h-3 w-3 mr-2" />
-                  Real-time Processing
-                </li>
+              <p className="eyebrow mb-3">Data Sources</p>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>UN Aid Dataset 2015–2023</li>
+                <li>World Bank Indicators</li>
+                <li>Real-time processing</li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-white/20 mt-8 pt-6 flex items-center justify-between">
-            <p className="text-sm text-gray-600">
-              © 2025 UN Aid Intelligence Platform. Built for UNDP Seoul
-              Hackathon 2025.
+          <div className="mt-8 flex flex-col items-start justify-between gap-3 border-t border-border pt-6 sm:flex-row sm:items-center">
+            <p className="text-xs text-muted-foreground">
+              © 2025 UN Aid Intelligence Platform · Built for UNDP Seoul
+              Hackathon 2025
             </p>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-sm text-gray-600">System Online</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="status-dot" />
+              <span className="text-xs text-muted-foreground">
+                All systems operational
+              </span>
             </div>
           </div>
         </div>

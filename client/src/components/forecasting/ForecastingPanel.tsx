@@ -184,11 +184,14 @@ export default function ForecastingPanel({ selectedCountry = null, selectedSecto
       <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
-              AI-Powered Aid Forecasting
-              <Badge variant="outline" className="ml-2">Professional ML Models</Badge>
-            </CardTitle>
+            <div>
+              <p className="eyebrow">Configuration</p>
+              <CardTitle className="mt-1 flex items-center gap-2 text-lg">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Aid Flow Forecast
+                <Badge variant="secondary" className="ml-1 bg-primary/10 text-primary">Ensemble ML</Badge>
+              </CardTitle>
+            </div>
             <div className="w-64">
               <ExportButtons
                 country={parameters.country}

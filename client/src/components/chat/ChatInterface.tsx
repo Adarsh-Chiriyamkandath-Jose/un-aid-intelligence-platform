@@ -105,55 +105,40 @@ export default function ChatInterface() {
 
   return (
     <div className="space-y-6">
-      {/* Header Section */}
-      <div className="text-center space-y-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl shadow-lg">
-          <Sparkles className="h-8 w-8 text-white" />
+      {/* Status Bar */}
+      <div className="inline-flex items-center gap-4 rounded-full border border-border bg-card px-5 py-2.5">
+        <div className="flex items-center gap-2">
+          <span className="status-dot" />
+          <span className="text-sm font-medium text-muted-foreground">Online</span>
         </div>
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            AI Assistant
-          </h1>
-          <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
-            Advanced AI-powered analysis for international development aid data. Get insights, trends, and forecasts from real UN data spanning 2015-2023.
-          </p>
+        <Separator orientation="vertical" className="h-4" />
+        <div className="flex items-center gap-2">
+          <Brain className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">GPT-4o</span>
         </div>
-        
-        {/* Status Bar */}
-        <div className="inline-flex items-center gap-4 px-6 py-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-full border border-green-200 dark:border-green-800">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-green-700 dark:text-green-300">Online</span>
-          </div>
-          <Separator orientation="vertical" className="h-4" />
-          <div className="flex items-center gap-2">
-            <Brain className="h-4 w-4 text-indigo-600" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">GPT-4o</span>
-          </div>
-          <Separator orientation="vertical" className="h-4" />
-          <div className="flex items-center gap-2">
-            <Database className="h-4 w-4 text-purple-600" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">UN Dataset</span>
-          </div>
+        <Separator orientation="vertical" className="h-4" />
+        <div className="flex items-center gap-2">
+          <Database className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">UN Dataset</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Chat Interface */}
         <div className="lg:col-span-3">
-          <Card className="shadow-xl border-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl">
-            <CardHeader className="border-b border-gray-100 dark:border-gray-800">
+          <Card>
+            <CardHeader className="border-b border-border">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-white" />
+                  <div className="w-10 h-10 bg-primary/10 text-primary ring-1 ring-primary/15 rounded-xl flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Conversation</h3>
-                    <p className="text-sm text-gray-500 font-normal">Ask anything about international aid data</p>
+                    <p className="text-sm text-muted-foreground font-normal">Ask anything about international aid data</p>
                   </div>
                 </CardTitle>
-                <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                <Badge variant="secondary" className="bg-primary/10 text-primary">
                   <Clock className="h-3 w-3 mr-1" />
                   Real-time
                 </Badge>
@@ -172,42 +157,42 @@ export default function ChatInterface() {
                   >
                     {/* Avatar */}
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      msg.role === 'assistant' 
-                        ? 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500' 
-                        : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                      msg.role === 'assistant'
+                        ? 'bg-primary/10 text-primary ring-1 ring-primary/15'
+                        : 'bg-primary text-primary-foreground'
                     }`}>
                       {msg.role === 'assistant' ? (
-                        <Sparkles className="h-5 w-5 text-white" />
+                        <Sparkles className="h-5 w-5" />
                       ) : (
-                        <User className="h-5 w-5 text-white" />
+                        <User className="h-5 w-5" />
                       )}
                     </div>
-                    
+
                     {/* Message Content */}
                     <div className={`flex-1 max-w-3xl ${msg.role === 'user' ? 'text-right' : ''}`}>
-                      <div className={`inline-block p-4 rounded-2xl shadow-lg ${
+                      <div className={`inline-block p-4 rounded-2xl ${
                         msg.role === 'user'
-                          ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-tr-md'
-                          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-tl-md'
+                          ? 'chat-bubble-user rounded-tr-md'
+                          : 'chat-bubble-ai rounded-tl-md'
                       }`}>
                         <p className={`text-sm leading-relaxed whitespace-pre-wrap ${
-                          msg.role === 'assistant' ? 'text-gray-800 dark:text-gray-200' : 'text-white'
+                          msg.role === 'assistant' ? 'text-foreground' : 'text-primary-foreground'
                         }`}>
                           {msg.content}
                         </p>
-                        
+
                         {msg.metadata?.confidence && (
-                          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex items-center gap-2">
-                            <CheckCircle className={`h-4 w-4 ${msg.role === 'user' ? 'text-blue-200' : 'text-green-500'}`} />
-                            <span className={`text-xs ${msg.role === 'user' ? 'text-blue-200' : 'text-gray-500'}`}>
+                          <div className={`mt-3 pt-3 border-t flex items-center gap-2 ${msg.role === 'user' ? 'border-white/25' : 'border-border'}`}>
+                            <CheckCircle className={`h-4 w-4 ${msg.role === 'user' ? 'text-white/80' : 'text-emerald-500'}`} />
+                            <span className={`text-xs ${msg.role === 'user' ? 'text-white/80' : 'text-muted-foreground'}`}>
                               Confidence: {Math.round(msg.metadata.confidence * 100)}%
                             </span>
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Timestamp */}
-                      <p className={`text-xs text-gray-400 mt-2 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                      <p className={`text-xs text-muted-foreground mt-2 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                         {new Date(msg.createdAt || msg.created_at).toLocaleTimeString()}
                       </p>
                     </div>
@@ -217,17 +202,17 @@ export default function ChatInterface() {
                 {/* Typing Indicator */}
                 {sendMessageMutation.isPending && (
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="h-5 w-5 text-white" />
+                    <div className="w-10 h-10 bg-primary/10 text-primary ring-1 ring-primary/15 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="h-5 w-5" />
                     </div>
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-2xl rounded-tl-md shadow-lg">
+                    <div className="chat-bubble-ai p-4 rounded-2xl rounded-tl-md">
                       <div className="flex items-center gap-3">
                         <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}} />
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}} />
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}} />
+                          <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{animationDelay: '0ms'}} />
+                          <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{animationDelay: '150ms'}} />
+                          <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{animationDelay: '300ms'}} />
                         </div>
-                        <span className="text-sm text-gray-500">AI is thinking...</span>
+                        <span className="text-sm text-muted-foreground">AI is thinking…</span>
                       </div>
                     </div>
                   </div>
@@ -238,22 +223,22 @@ export default function ChatInterface() {
 
               {/* Chat Input */}
               <div className="relative">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-3 p-2.5 bg-secondary/60 rounded-2xl border border-border focus-within:ring-2 focus-within:ring-ring/40 transition-shadow">
                   <Input
                     ref={inputRef}
                     type="text"
-                    placeholder="Ask about aid flows, donors, sectors, or forecasts..."
+                    placeholder="Ask about aid flows, donors, sectors, or forecasts…"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     disabled={sendMessageMutation.isPending}
-                    className="flex-1 border-0 bg-transparent text-base placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="flex-1 border-0 bg-transparent text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                   <Button
                     onClick={sendMessage}
                     disabled={sendMessageMutation.isPending || !message.trim()}
                     size="lg"
-                    className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
+                    className="rounded-xl"
                   >
                     <Send className="h-5 w-5" />
                   </Button>
@@ -266,13 +251,13 @@ export default function ChatInterface() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Quick Queries */}
-          <Card className="shadow-lg border-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl">
+          <Card>
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-500" />
                 Quick Queries
               </CardTitle>
-              <p className="text-sm text-gray-500">Jump-start your analysis</p>
+              <p className="text-sm text-muted-foreground">Jump-start your analysis</p>
             </CardHeader>
             <CardContent className="space-y-3">
               {quickQueries.map((query, index) => {
@@ -282,19 +267,19 @@ export default function ChatInterface() {
                     key={index}
                     variant="ghost"
                     size="lg"
-                    className="w-full justify-start h-auto p-4 text-left hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-900/20 dark:hover:to-purple-900/20 border border-gray-200 dark:border-gray-700 rounded-xl transition-all duration-200"
+                    className="w-full justify-start h-auto p-3.5 text-left border border-border hover:border-primary/30 hover:bg-accent rounded-xl transition-all duration-200"
                     onClick={() => sendQuickQuery(query.text)}
                     disabled={sendMessageMutation.isPending}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <IconComponent className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                      <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                        <IconComponent className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           {query.text}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           {query.category}
                         </p>
                       </div>

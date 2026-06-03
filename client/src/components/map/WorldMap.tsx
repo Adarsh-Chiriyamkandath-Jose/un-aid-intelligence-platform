@@ -181,17 +181,18 @@ export default function WorldMap() {
   return (
     <div className="space-y-6">
       {/* Map Controls */}
-      <Card className="glassmorphism">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Map className="h-5 w-5" />
-            Interactive World Map
+          <p className="eyebrow">Filters</p>
+          <CardTitle className="mt-1 flex items-center gap-2 text-lg">
+            <Map className="h-5 w-5 text-primary" />
+            Refine the view
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">Year</label>
               <Select value={filters.year} onValueChange={(value) => setFilters({...filters, year: value})}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select year" />
@@ -212,7 +213,7 @@ export default function WorldMap() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sector</label>
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">Sector</label>
               <Select value={filters.sector} onValueChange={(value) => setFilters({...filters, sector: value})}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select sector" />
@@ -262,7 +263,7 @@ export default function WorldMap() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Donor</label>
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">Donor</label>
               <Select value={filters.donor} onValueChange={(value) => setFilters({...filters, donor: value})}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select donor" />
@@ -284,53 +285,55 @@ export default function WorldMap() {
       </Card>
 
       {/* Map Container */}
-      <Card className="glassmorphism">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Global Aid Distribution</CardTitle>
+            <div>
+              <p className="eyebrow">Distribution</p>
+              <CardTitle className="mt-1 text-lg">Global Aid Distribution</CardTitle>
+            </div>
             <div className="flex items-center space-x-4">
               {/* Legend */}
-              <div className="flex items-center space-x-2 text-sm">
-                <div className="w-4 h-4 bg-blue-200 rounded" />
-                <span className="text-gray-600">Low</span>
-                <div className="w-4 h-4 bg-blue-400 rounded" />
-                <span className="text-gray-600">Medium</span>
-                <div className="w-4 h-4 bg-blue-700 rounded" />
-                <span className="text-gray-600">High</span>
+              <div className="hidden items-center gap-2 text-sm sm:flex">
+                <span className="text-xs font-medium text-muted-foreground">Intensity</span>
+                <div className="h-3 w-3 rounded-sm bg-sky-200" />
+                <div className="h-3 w-3 rounded-sm bg-primary/60" />
+                <div className="h-3 w-3 rounded-sm bg-primary" />
+                <div className="h-3 w-3 rounded-sm bg-violet-600" />
               </div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          {/* Mapbox Container */}
-          <div 
+          {/* Map Container */}
+          <div
             ref={mapRef}
-            className="h-[600px] rounded-lg overflow-hidden relative border"
+            className="relative h-[600px] overflow-hidden rounded-xl border border-border bg-secondary/40"
           >
             {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 z-10">
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-secondary/40">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600">Loading map data...</p>
+                  <div className="spinner-un mx-auto mb-4" />
+                  <p className="text-sm text-muted-foreground">Loading map data…</p>
                 </div>
               </div>
             )}
-            
+
             {/* No Data Message */}
             {!isLoading && mapData && Array.isArray(mapData) && mapData.length === 0 && (filters.year || filters.sector || filters.donor) && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 z-10">
-                <div className="text-center p-8 bg-white rounded-lg shadow-lg border border-gray-200">
-                  <div className="text-gray-500 text-6xl mb-4">📊</div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">No Aid Data Available</h3>
-                  <p className="text-gray-600 mb-4">
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-secondary/40">
+                <div className="surface surface-raised max-w-sm p-8 text-center">
+                  <div className="mb-3 text-5xl">📊</div>
+                  <h3 className="mb-2 text-lg font-semibold text-foreground">No Aid Data Available</h3>
+                  <p className="mb-4 text-sm text-muted-foreground">
                     No aid records found for the selected filters:
                   </p>
-                  <div className="text-sm text-gray-500 space-y-1">
+                  <div className="space-y-1 text-sm text-muted-foreground">
                     {filters.year && <p>Year: {filters.year}</p>}
                     {filters.sector && filters.sector !== 'all' && <p>Sector: {filters.sector}</p>}
                     {filters.donor && filters.donor !== 'all' && <p>Donor: {filters.donor}</p>}
                   </div>
-                  <p className="text-xs text-gray-400 mt-4">
+                  <p className="mt-4 text-xs text-muted-foreground/70">
                     Try adjusting your filters or selecting different years
                   </p>
                 </div>
@@ -340,48 +343,46 @@ export default function WorldMap() {
 
           {/* Country Details Panel */}
           {selectedCountry && (
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white/50 rounded-lg p-4 border">
-                <h4 className="font-semibold text-gray-800 mb-2">Selected Country</h4>
-                <p className="text-lg font-bold text-blue-600">{selectedCountry.name}</p>
-                <p className="text-sm text-gray-600">
-                  Total Aid: {
-                    selectedCountry.totalAid >= 1000 
-                      ? `$${(selectedCountry.totalAid/1000).toFixed(1)}M`
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-xl border border-border bg-secondary/40 p-4">
+                <p className="eyebrow mb-2">Selected Country</p>
+                <p className="text-lg font-semibold text-foreground">{selectedCountry.name}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Total Aid:{" "}
+                  <span className="stat-num font-medium text-foreground">
+                    {selectedCountry.totalAid >= 1000
+                      ? `$${(selectedCountry.totalAid / 1000).toFixed(1)}M`
                       : selectedCountry.totalAid >= 1
-                      ? `$${selectedCountry.totalAid.toFixed(1)}K`  
-                      : `$${(selectedCountry.totalAid * 1000).toFixed(0)}`
-                  }
+                      ? `$${selectedCountry.totalAid.toFixed(1)}K`
+                      : `$${(selectedCountry.totalAid * 1000).toFixed(0)}`}
+                  </span>
                 </p>
-                <Badge variant="outline" className="mt-2">
+                <Badge variant="outline" className="mt-3">
                   {selectedCountry.region}
                 </Badge>
               </div>
-              
-              <div className="bg-white/50 rounded-lg p-4 border">
-                <h4 className="font-semibold text-gray-800 mb-2">Aid Intensity</h4>
+
+              <div className="rounded-xl border border-border bg-secondary/40 p-4">
+                <p className="eyebrow mb-2">Aid Intensity</p>
                 <div className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded ${getIntensityColor(selectedCountry.aidIntensity)}`} />
-                  <span className="text-lg font-bold text-purple-600">
+                  <div className={`h-3.5 w-3.5 rounded ${getIntensityColor(selectedCountry.aidIntensity)}`} />
+                  <span className="text-lg font-semibold text-foreground">
                     {selectedCountry.aidIntensity > 0 ? "High" : "Low"}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Intensity Score: {selectedCountry.aidIntensity.toFixed(1)}
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Intensity Score:{" "}
+                  <span className="stat-num">{selectedCountry.aidIntensity.toFixed(1)}</span>
                 </p>
               </div>
-              
-              <div className="bg-white/50 rounded-lg p-4 border">
-                <h4 className="font-semibold text-gray-800 mb-2">Aid Records</h4>
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold text-green-600">
-                    {selectedCountry.aidCount || 0}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Total aid transactions
-                  </p>
-                </div>
-                <Badge variant="secondary" className="mt-2">
+
+              <div className="rounded-xl border border-border bg-secondary/40 p-4">
+                <p className="eyebrow mb-2">Aid Records</p>
+                <p className="stat-num text-2xl font-semibold text-foreground">
+                  {selectedCountry.aidCount || 0}
+                </p>
+                <p className="text-sm text-muted-foreground">Total aid transactions</p>
+                <Badge variant="secondary" className="mt-3">
                   {selectedCountry.isoCode}
                 </Badge>
               </div>
