@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Send, MessageSquare, Brain, CheckCircle, User, Sparkles, Bot, Clock, Zap, Globe, BarChart3, TrendingUp, Database } from "lucide-react";
 
 interface ChatMessage {
@@ -25,6 +26,7 @@ export default function ChatInterface() {
   const [sessionId] = useState(() => `session_${Date.now()}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const { data: chatHistory, refetch: refetchHistory } = useQuery({
     queryKey: [`/api/chat/history/${sessionId}`],
@@ -43,6 +45,14 @@ export default function ChatInterface() {
       refetchHistory();
       setMessage('');
       inputRef.current?.focus();
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Couldn't reach the assistant",
+        description:
+          "The server may be waking up. Please try sending your message again.",
+      });
     },
   });
 

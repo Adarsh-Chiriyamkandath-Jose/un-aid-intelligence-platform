@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, TrendingUp, Brain, BarChart3, AlertCircle } from 'lucide-react';
 import ExportButtons from '@/components/export/ExportButtons';
 import { useCountries, useSectors } from '@/hooks/use-aid-data';
+import { apiJson } from '@/lib/queryClient';
 import Plot from 'react-plotly.js';
 
 interface ForecastingPanelProps {
