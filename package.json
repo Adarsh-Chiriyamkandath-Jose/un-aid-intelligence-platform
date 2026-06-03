@@ -9,7 +9,7 @@
   "start": "NODE_ENV=production node dist/index.js",
   "check": "tsc -p client/tsconfig.json",
   "db:push": "drizzle-kit push",
-  "build:client": "vite build --config client/vite.config.js"
+  "build:client": "cd client && vite build"
 },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

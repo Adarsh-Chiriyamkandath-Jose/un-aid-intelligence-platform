@@ -8,3 +8,5 @@ vite.config.ts.*
 merged_data.csv
 __pycache__/
 *.pyc
+.vercel
+.env*.local
