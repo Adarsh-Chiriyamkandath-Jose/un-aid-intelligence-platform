@@ -64,22 +64,22 @@ export default function WorldMap() {
     enabled: true,
   });
 
-  // Initialize Mapbox when component mounts
+  // Initialize the map when the component mounts
   useEffect(() => {
     if (!mapRef.current || !mapData || !Array.isArray(mapData) || mapData.length === 0) return;
 
-    // Wait for Mapbox GL to load
+    // Wait for MapLibre GL to load (loaded async via CDN in index.html)
     const initMap = () => {
-      if (typeof window.mapboxgl === 'undefined') {
+      if (typeof window.maplibregl === 'undefined') {
         setTimeout(initMap, 100);
         return;
       }
 
-      window.mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-      
-      const map = new window.mapboxgl.Map({
+      // MapLibre GL is an open-source, token-free drop-in for Mapbox GL.
+      // OpenFreeMap provides a free hosted style (no API key, no usage limits).
+      const map = new window.maplibregl.Map({
         container: mapRef.current,
-        style: 'mapbox://styles/mapbox/light-v11',
+        style: 'https://tiles.openfreemap.org/styles/positron',
         center: [77.2090, 28.6139], // Centered on India (largest recipient)
         zoom: 2
       });

@@ -29,7 +29,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    // Vercel's /api proxy rewrite 404s on trailing slashes (e.g. "/api/countries/"),
+    // so normalize them away. The FastAPI backend accepts both forms.
+    const url = (queryKey.join("/") as string).replace(/\/+$/, "");
+    const res = await fetch(url, {
       credentials: "include",
     });
 
