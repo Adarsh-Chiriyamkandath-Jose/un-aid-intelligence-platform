@@ -8,6 +8,10 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is required")
 
+# Render/Heroku expose a legacy "postgres://" scheme that SQLAlchemy 2.0 rejects.
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 # Create SQLAlchemy engine
 engine = create_engine(DATABASE_URL)
 
