@@ -15,6 +15,7 @@ interface MapData {
   longitude: string;
   totalAid: number;
   aidIntensity: number;
+  aidCount: number;
 }
 
 interface MapFilters {
@@ -34,7 +35,7 @@ export default function WorldMap() {
     queryClient.clear(); // Clear entire cache
   }, [queryClient]);
 
-  const { data: mapData, isLoading } = useQuery({
+  const { data: mapData, isLoading } = useQuery<MapData[]>({
     queryKey: ['/api/map/countries', filters],
     queryFn: () => {
       const params = new URLSearchParams();
@@ -48,17 +49,17 @@ export default function WorldMap() {
     enabled: true,
   });
 
-  const { data: countries } = useQuery({
+  const { data: countries } = useQuery<any[]>({
     queryKey: ['/api/countries/'],
     enabled: true,
   });
 
-  const { data: sectors } = useQuery({
+  const { data: sectors } = useQuery<any[]>({
     queryKey: ['/api/sectors/'],
     enabled: true,
   });
 
-  const { data: donors } = useQuery({
+  const { data: donors } = useQuery<any[]>({
     queryKey: ['/api/donors'],
     enabled: true,
   });
@@ -138,7 +139,7 @@ export default function WorldMap() {
         });
 
         // Add click event for country selection
-        map.on('click', 'aid-circles', (e) => {
+        map.on('click', 'aid-circles', (e: any) => {
           const feature = e.features[0];
           const countryData = mapData.find(c => c.name === feature.properties.name);
           if (countryData) {

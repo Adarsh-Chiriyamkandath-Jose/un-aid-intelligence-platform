@@ -9,8 +9,8 @@ import { useCountries, useSectors } from '@/hooks/use-aid-data';
 import Plot from 'react-plotly.js';
 
 interface ForecastingPanelProps {
-  selectedCountry: string | null;
-  selectedSector: string;
+  selectedCountry?: string | null;
+  selectedSector?: string;
 }
 
 interface ForecastParameters {
@@ -24,7 +24,9 @@ interface ForecastResult {
   sector: string;
   predictions: Array<{
     year: number;
-    amount: number;
+    predicted: number;
+    lower: number;
+    upper: number;
     confidence?: number;
   }>;
   accuracy: {
@@ -39,6 +41,8 @@ interface ForecastResult {
     importance: number;
   }>;
   insights: string[];
+  // Injected client-side from the map/countries endpoint (see generateForecast)
+  historical_baseline: number;
 }
 
 interface SHAPExplanation {
@@ -56,7 +60,7 @@ interface SHAPResult {
   sector?: string;
 }
 
-export default function ForecastingPanel({ selectedCountry, selectedSector }: ForecastingPanelProps) {
+export default function ForecastingPanel({ selectedCountry = null, selectedSector = 'all' }: ForecastingPanelProps) {
   console.log('🔥 MODERN UI COMPONENT LOADED - SHAP WILL AUTO-TRIGGER!');
 
   const [parameters, setParameters] = React.useState<ForecastParameters>({

@@ -125,7 +125,7 @@ export default function AidChart({
   }
 
   // Helper function to clean sector names
-  const cleanSectorName = (sectorName: string) => {
+  const cleanSectorName = (sectorName: string | undefined) => {
     if (!sectorName) return '';
     
     // Remove Roman numerals and letter prefixes (I.5.a., II.1., III.1.a., etc.)
@@ -220,7 +220,7 @@ export default function AidChart({
                 style={{ backgroundColor: entry.fill }}
               />
               <span className="text-gray-700 font-medium">
-                {entry.cleanedSector} ({entry.percentage.toFixed(1)}%)
+                {entry.cleanedSector} ({(entry.percentage ?? 0).toFixed(1)}%)
               </span>
             </div>
           ))}
@@ -253,9 +253,9 @@ export default function AidChart({
               }
             }}
           />
-          <Tooltip 
-            formatter={formatTooltip}
-            contentStyle={{ 
+          <Tooltip
+            formatter={(value: any) => formatTooltip(value)}
+            contentStyle={{
               backgroundColor: '#ffffff', 
               border: '1px solid #e5e7eb',
               borderRadius: '8px',

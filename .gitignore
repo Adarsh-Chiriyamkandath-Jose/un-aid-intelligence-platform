@@ -4,4 +4,7 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
-.envmerged_data.csv
+.env
+merged_data.csv
+__pycache__/
+*.pyc
