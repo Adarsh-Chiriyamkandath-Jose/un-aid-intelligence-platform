@@ -76,9 +76,9 @@ function PageHeader({
       <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 sm:flex">
         <Icon className="h-5 w-5" />
       </div>
-      <div>
+      <div className="min-w-0">
         <p className="eyebrow">{eyebrow}</p>
-        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
           {title}
         </h2>
         {description && (
@@ -163,17 +163,17 @@ export default function Dashboard() {
       {/* App bar */}
       <header className="sticky top-0 z-50 border-b border-border bg-card/85 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
+          <div className="flex h-16 items-center justify-between gap-3">
             {/* Brand */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
                 <Globe className="h-5 w-5" />
               </div>
-              <div className="leading-tight">
-                <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
+              <div className="min-w-0 leading-tight">
+                <h1 className="truncate text-[15px] font-semibold tracking-tight text-foreground">
                   UN Aid Intelligence
                 </h1>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                <p className="truncate text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   Development Finance Platform
                 </p>
               </div>
@@ -199,7 +199,7 @@ export default function Dashboard() {
             </nav>
 
             {/* Status */}
-            <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
+            <div className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
               <span className="status-dot" />
               <span className="hidden text-xs font-medium text-muted-foreground sm:block">
                 Live data
@@ -229,7 +229,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <TabsList className="hidden">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
@@ -257,16 +257,16 @@ export default function Dashboard() {
                     className="animate-rise transition-shadow hover:shadow-md"
                     style={{ animationDelay: `${i * 70}ms` }}
                   >
-                    <CardContent className="p-5">
-                      <div className="flex items-center justify-between">
+                    <CardContent className="p-4 sm:p-5">
+                      <div className="flex items-center justify-between gap-2">
                         <div
-                          className={`flex h-10 w-10 items-center justify-center rounded-xl ring-1 ${TINT[m.tint]}`}
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${TINT[m.tint]}`}
                         >
                           <Icon className="h-5 w-5" />
                         </div>
                         <DeltaPill tone={m.tone}>{m.delta}</DeltaPill>
                       </div>
-                      <p className="mt-4 stat-num text-3xl font-semibold text-foreground">
+                      <p className="mt-4 stat-num text-2xl font-semibold text-foreground sm:text-3xl">
                         {m.value}
                       </p>
                       <p className="mt-1 text-sm font-medium text-muted-foreground">
@@ -285,8 +285,8 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
+                  <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+                    <div className="min-w-0">
                       <p className="eyebrow">Trend</p>
                       <CardTitle className="mt-1 text-lg">
                         Global Aid Flows

@@ -85,11 +85,11 @@ export function CompactExportButtons({
         className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/20 transition-colors"
       >
         {isExporting === 'csv' ? (
-          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+          <Loader2 className="h-3 w-3 animate-spin sm:mr-1" />
         ) : (
-          <Download className="mr-1 h-3 w-3" />
+          <Download className="h-3 w-3 sm:mr-1" />
         )}
-        Export CSV
+        <span className="hidden sm:inline">Export CSV</span>
       </Button>
       
       <Button
@@ -100,11 +100,11 @@ export function CompactExportButtons({
         className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/20 transition-colors"
       >
         {isExporting === 'pdf' ? (
-          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+          <Loader2 className="h-3 w-3 animate-spin sm:mr-1" />
         ) : (
-          <FileText className="mr-1 h-3 w-3" />
+          <FileText className="h-3 w-3 sm:mr-1" />
         )}
-        PDF Report
+        <span className="hidden sm:inline">PDF Report</span>
       </Button>
     </div>
   );

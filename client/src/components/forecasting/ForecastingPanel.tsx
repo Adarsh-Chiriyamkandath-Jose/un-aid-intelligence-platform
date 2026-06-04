@@ -297,8 +297,9 @@ export default function ForecastingPanel({ selectedCountry = null, selectedSecto
                 {/* Interactive Forecast Chart */}
                 <div>
                   <h4 className="font-semibold text-gray-800 mb-4">Forecast Visualization</h4>
-                  <div className="bg-white rounded-lg border p-4">
+                  <div className="overflow-hidden rounded-lg border bg-white p-2 sm:p-4">
                     <Plot
+                      useResizeHandler
                       data={[
                         // Historical baseline (2023)
                         {

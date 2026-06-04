@@ -138,35 +138,35 @@ export default function ChatInterface() {
         <div className="lg:col-span-3">
           <Card>
             <CardHeader className="border-b border-border">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary/10 text-primary ring-1 ring-primary/15 rounded-xl flex items-center justify-center">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="flex min-w-0 items-center gap-3">
+                  <div className="w-10 h-10 shrink-0 bg-primary/10 text-primary ring-1 ring-primary/15 rounded-xl flex items-center justify-center">
                     <MessageSquare className="h-5 w-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-lg font-semibold">Conversation</h3>
-                    <p className="text-sm text-muted-foreground font-normal">Ask anything about international aid data</p>
+                    <p className="truncate text-sm text-muted-foreground font-normal">Ask anything about international aid data</p>
                   </div>
                 </CardTitle>
-                <Badge variant="secondary" className="bg-primary/10 text-primary">
+                <Badge variant="secondary" className="shrink-0 bg-primary/10 text-primary">
                   <Clock className="h-3 w-3 mr-1" />
                   Real-time
                 </Badge>
               </div>
             </CardHeader>
 
-            <CardContent className="flex-1 flex flex-col p-6">
+            <CardContent className="flex-1 flex flex-col p-4 sm:p-6">
               {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto space-y-6 mb-6 pr-2 max-h-[500px]">
+              <div className="flex-1 overflow-y-auto space-y-6 mb-6 pr-1 sm:pr-2 max-h-[60vh] sm:max-h-[500px]">
                 {allMessages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex items-start gap-4 ${
+                    className={`flex items-start gap-3 sm:gap-4 ${
                       msg.role === 'user' ? 'flex-row-reverse' : ''
                     }`}
                   >
                     {/* Avatar */}
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    <div className={`h-9 w-9 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                       msg.role === 'assistant'
                         ? 'bg-primary/10 text-primary ring-1 ring-primary/15'
                         : 'bg-primary text-primary-foreground'
