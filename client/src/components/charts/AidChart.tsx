@@ -170,8 +170,8 @@ export default function AidChart({
     }));
 
     return (
-      <div className="flex items-center justify-center w-full h-full">
-        <div className="flex-1" style={{ height: height }}>
+      <div className="flex flex-col items-center justify-center w-full h-full sm:flex-row">
+        <div className="w-full flex-1" style={{ height: height }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -212,7 +212,7 @@ export default function AidChart({
         </div>
         
         {/* Legend */}
-        <div className="flex-1 pl-4 space-y-2">
+        <div className="mt-4 w-full flex-1 space-y-2 sm:mt-0 sm:pl-4">
           {pieData.map((entry, index) => (
             <div key={index} className="flex items-center gap-2 text-sm">
               <div 

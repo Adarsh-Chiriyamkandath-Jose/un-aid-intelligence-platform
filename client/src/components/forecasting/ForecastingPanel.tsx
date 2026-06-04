@@ -73,6 +73,7 @@ export default function ForecastingPanel({ selectedCountry = null, selectedSecto
   const [forecast, setForecast] = React.useState<ForecastResult | null>(null);
   const [shapExplanations, setShapExplanations] = React.useState<SHAPResult | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [forecastError, setForecastError] = React.useState(false);
   const [shapLoading, setShapLoading] = React.useState(false);
   const [shapError, setShapError] = React.useState(false);
 
@@ -87,11 +88,11 @@ export default function ForecastingPanel({ selectedCountry = null, selectedSecto
 
   // Generate forecast for country-level predictions
   const generateForecast = async () => {
-    console.log('🎯 MODERN UI - Generating country forecast for:', parameters.country);
     setIsLoading(true);
     setForecast(null);
     setShapExplanations(null);
     setShapError(false);
+    setForecastError(false);
 
     try {
       const requestBody = {
@@ -101,99 +102,82 @@ export default function ForecastingPanel({ selectedCountry = null, selectedSecto
         years: parameters.years
       };
 
-      console.log('📤 MODERN UI API Request:', JSON.stringify(requestBody));
-
-      // Fetch both forecast and historical data
-      const [response, historicalResponse] = await Promise.all([
-        fetch('/api/forecasting/forecast', {
+      // Fetch both forecast and historical data (with automatic retry on cold starts)
+      const [data, historicalData] = await Promise.all([
+        apiJson('/api/forecasting/forecast', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestBody)
         }),
-        fetch('/api/map/countries?year=2023')
+        apiJson<any[]>('/api/map/countries?year=2023')
       ]);
 
-      if (!response.ok) {
-        throw new Error(`Forecast API error: ${response.status}`);
-      }
+      // Find historical data for this country to anchor the chart baseline
+      const countryHistorical = Array.isArray(historicalData)
+        ? historicalData.find((c: any) => c.name.toLowerCase() === parameters.country.toLowerCase())
+        : undefined;
 
-      const data = await response.json();
-      const historicalData = await historicalResponse.json();
-      
-      // Find historical data for this country (convert to thousands to match forecast units)
-      const countryHistorical = historicalData.find((c: any) => 
-        c.name.toLowerCase() === parameters.country.toLowerCase()
-      );
-      
-      // Add historical baseline to forecast data (convert from millions to thousands)
       const enhancedData = {
         ...data,
-        historical_baseline: countryHistorical?.totalAid || data.predictions[0].predicted * 0.95
+        historical_baseline: countryHistorical?.totalAid ?? data.predictions[0].predicted * 0.95
       };
-      
-      console.log('✅ MODERN UI Forecast + Historical received:', enhancedData);
+
       setForecast(enhancedData);
-      setIsLoading(false);
     } catch (error) {
-      console.error('❌ MODERN UI Forecast failed:', error);
+      console.error('Forecast failed:', error);
+      setForecastError(true);
+    } finally {
       setIsLoading(false);
     }
   };
 
-  // AUTO-SHAP TRIGGER for country-level analysis
-  React.useEffect(() => {
-    console.log('🔍 SHAP AUTO-TRIGGER CHECK:', {
-      hasForecast: !!forecast,
-      hasExplanations: !!shapExplanations,
-      isLoading: shapLoading,
-      country: parameters.country
-    });
-    
-    if (forecast && !shapExplanations && !shapLoading) {
-      console.log('🚀 AUTO-GENERATING SHAP FOR:', parameters.country);
-
-      setShapLoading(true);
-      fetch('/api/forecasting/shap-explanations', {
+  // Generate SHAP explainability for the current forecast (retries on cold starts)
+  const runShap = async () => {
+    setShapLoading(true);
+    setShapError(false);
+    setShapExplanations(null);
+    try {
+      const data = await apiJson<SHAPResult>('/api/forecasting/shap-explanations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           country: parameters.country,
-          sector: 'all', // Always use all sectors for country-level analysis
+          sector: 'all',
           model: parameters.model,
           years: parameters.years
         })
-      })
-      .then(response => {
-        console.log('📡 SHAP AUTO RESPONSE:', response.status);
-        return response.json();
-      })
-      .then(data => {
-        console.log('✅ SHAP AUTO SUCCESS:', data);
-        setShapExplanations(data);
-        setShapLoading(false);
-      })
-      .catch(error => {
-        console.error('❌ SHAP AUTO FAILED:', error);
-        setShapLoading(false);
-        setShapError(true);
       });
+      setShapExplanations(data);
+    } catch (error) {
+      console.error('SHAP failed:', error);
+      setShapError(true);
+    } finally {
+      setShapLoading(false);
     }
+  };
+
+  // Auto-generate SHAP once a forecast is ready
+  React.useEffect(() => {
+    if (forecast && !shapExplanations && !shapLoading && !shapError) {
+      runShap();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forecast]);
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="eyebrow">Configuration</p>
-              <CardTitle className="mt-1 flex items-center gap-2 text-lg">
+              <CardTitle className="mt-1 flex flex-wrap items-center gap-2 text-lg">
                 <TrendingUp className="h-5 w-5 text-primary" />
                 Aid Flow Forecast
                 <Badge variant="secondary" className="ml-1 bg-primary/10 text-primary">Ensemble ML</Badge>
               </CardTitle>
             </div>
-            <div className="w-64">
+            <div className="w-full sm:w-64">
               <ExportButtons
                 country={parameters.country}
                 sector={selectedSector !== 'all' ? selectedSector : undefined}
@@ -261,7 +245,7 @@ export default function ForecastingPanel({ selectedCountry = null, selectedSecto
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Button
               onClick={generateForecast}
               disabled={isLoading}
@@ -278,36 +262,7 @@ export default function ForecastingPanel({ selectedCountry = null, selectedSecto
             </Button>
 
             <Button
-              onClick={() => {
-                if (!forecast) return;
-                
-                console.log('🧠 MANUAL SHAP CLICKED');
-                setShapLoading(true);
-                setShapExplanations(null);
-                setShapError(false);
-
-                fetch('/api/forecasting/shap-explanations', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    country: parameters.country,
-                    sector: 'all', // Always use all sectors for country-level analysis
-                    model: parameters.model,
-                    years: parameters.years
-                  })
-                })
-                .then(response => response.json())
-                .then(data => {
-                  console.log('✅ MANUAL SHAP SUCCESS:', data);
-                  setShapExplanations(data);
-                  setShapLoading(false);
-                })
-                .catch(error => {
-                  console.error('❌ MANUAL SHAP FAILED:', error);
-                  setShapLoading(false);
-                  setShapError(true);
-                });
-              }}
+              onClick={runShap}
               disabled={shapLoading || !forecast}
               variant="outline"
               className="flex-1"
@@ -528,8 +483,20 @@ export default function ForecastingPanel({ selectedCountry = null, selectedSecto
                   </div>
                 </div>
               </div>
+            ) : forecastError ? (
+              <div className="text-center py-10">
+                <AlertCircle className="mx-auto h-10 w-10 text-amber-500 mb-3" />
+                <p className="font-medium text-foreground mb-1">Couldn't generate the forecast</p>
+                <p className="text-sm text-muted-foreground mb-4 max-w-sm mx-auto">
+                  The analytics service may be waking up. This usually resolves in a few seconds.
+                </p>
+                <Button onClick={generateForecast} disabled={isLoading} variant="outline">
+                  {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Try again
+                </Button>
+              </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 <TrendingUp className="mx-auto h-12 w-12 mb-4 opacity-50" />
                 <p>Generate a forecast to see predictions and interactive charts</p>
               </div>
@@ -597,22 +564,26 @@ export default function ForecastingPanel({ selectedCountry = null, selectedSecto
             )}
 
             {shapError && (
-              <div className="text-center py-8">
-                <Brain className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <div className="bg-yellow-50 dark:bg-yellow-950 p-6 rounded-lg border border-yellow-200 dark:border-yellow-800 max-w-md mx-auto">
-                  <p className="font-semibold text-yellow-800 dark:text-yellow-200 text-lg mb-2">SHAP Explanations</p>
-                  <p className="text-yellow-700 dark:text-yellow-300 text-base">Still under working, will be ready after some days</p>
-                </div>
+              <div className="text-center py-10">
+                <AlertCircle className="h-10 w-10 text-amber-500 mx-auto mb-3" />
+                <p className="font-medium text-foreground mb-1">Couldn't generate SHAP explanations</p>
+                <p className="text-sm text-muted-foreground mb-4 max-w-sm mx-auto">
+                  The explainability service may be waking up. Please try again in a moment.
+                </p>
+                <Button onClick={runShap} disabled={shapLoading || !forecast} variant="outline">
+                  {shapLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Retry SHAP analysis
+                </Button>
               </div>
             )}
 
             {!shapLoading && !shapExplanations && !shapError && forecast && (
               <div className="text-center py-8">
-                <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 mb-4">
+                <AlertCircle className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                <p className="text-muted-foreground mb-4">
                   Click the SHAP button above to analyze prediction factors
                 </p>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   Generate detailed AI explanations for this forecast
                 </div>
               </div>

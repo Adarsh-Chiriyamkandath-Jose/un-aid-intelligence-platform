@@ -116,7 +116,7 @@ export default function ChatInterface() {
   return (
     <div className="space-y-6">
       {/* Status Bar */}
-      <div className="inline-flex items-center gap-4 rounded-full border border-border bg-card px-5 py-2.5">
+      <div className="inline-flex max-w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-border bg-card px-5 py-2.5">
         <div className="flex items-center gap-2">
           <span className="status-dot" />
           <span className="text-sm font-medium text-muted-foreground">Online</span>

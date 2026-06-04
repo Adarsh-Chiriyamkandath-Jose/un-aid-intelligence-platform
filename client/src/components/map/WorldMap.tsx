@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { apiJson } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Map, TrendingUp, Globe, DollarSign } from "lucide-react";
 
@@ -28,12 +29,7 @@ export default function WorldMap() {
   const [selectedCountry, setSelectedCountry] = useState<MapData | null>(null);
   const [filters, setFilters] = useState<MapFilters>({});
   const mapRef = useRef<HTMLDivElement>(null);
-  const queryClient = useQueryClient();
-
-  // Force invalidate cache on mount
-  useEffect(() => {
-    queryClient.clear(); // Clear entire cache
-  }, [queryClient]);
+  const mapInstanceRef = useRef<any>(null);
 
   const { data: mapData, isLoading } = useQuery<MapData[]>({
     queryKey: ['/api/map/countries', filters],
@@ -42,9 +38,9 @@ export default function WorldMap() {
       if (filters.year && filters.year !== 'all') params.append('year', filters.year);
       if (filters.sector && filters.sector !== 'all') params.append('sector', filters.sector);
       if (filters.donor && filters.donor !== 'all') params.append('donor', filters.donor);
-      
+
       const url = `/api/map/countries${params.toString() ? '?' + params.toString() : ''}`;
-      return fetch(url).then(res => res.json());
+      return apiJson<MapData[]>(url);
     },
     enabled: true,
   });
@@ -64,14 +60,53 @@ export default function WorldMap() {
     enabled: true,
   });
 
-  // Initialize the map when the component mounts
+  // Keep the latest data available to map event handlers without re-creating the map.
+  const mapDataRef = useRef<MapData[]>([]);
+  const mapLoadedRef = useRef(false);
+  useEffect(() => {
+    mapDataRef.current = Array.isArray(mapData) ? mapData : [];
+  }, [mapData]);
+
+  const buildFeatureCollection = (data: MapData[]) => ({
+    type: 'FeatureCollection' as const,
+    features: data
+      .filter((c) => c.longitude && c.latitude)
+      .map((country) => ({
+        type: 'Feature' as const,
+        properties: {
+          name: country.name,
+          totalAid: country.totalAid,
+          aidIntensity: country.aidIntensity,
+          region: country.region,
+          isoCode: country.isoCode,
+        },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [parseFloat(country.longitude), parseFloat(country.latitude)],
+        },
+      })),
+  });
+
+  // Create the map once; refresh its data in place when filters change.
   useEffect(() => {
     if (!mapRef.current || !mapData || !Array.isArray(mapData) || mapData.length === 0) return;
+    let cancelled = false;
 
-    // Wait for MapLibre GL to load (loaded async via CDN in index.html)
+    const refreshData = () => {
+      const src = mapInstanceRef.current?.getSource('aid-data');
+      if (src) src.setData(buildFeatureCollection(mapDataRef.current) as any);
+    };
+
     const initMap = () => {
       if (typeof window.maplibregl === 'undefined') {
-        setTimeout(initMap, 100);
+        if (!cancelled) setTimeout(initMap, 100);
+        return;
+      }
+      if (cancelled) return;
+
+      // Map already exists — just update the data instead of re-creating it.
+      if (mapInstanceRef.current) {
+        if (mapLoadedRef.current) refreshData();
         return;
       }
 
@@ -80,78 +115,53 @@ export default function WorldMap() {
       const map = new window.maplibregl.Map({
         container: mapRef.current,
         style: 'https://tiles.openfreemap.org/styles/positron',
-        center: [77.2090, 28.6139], // Centered on India (largest recipient)
-        zoom: 2
+        center: [77.209, 28.6139], // Centered on India (largest recipient)
+        zoom: 2,
+        attributionControl: false,
       });
+      mapInstanceRef.current = map;
+      map.addControl(new window.maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
       map.on('load', () => {
-        // Add country aid data as source
-        const countryFeatures = mapData.map(country => ({
-          type: 'Feature',
-          properties: {
-            name: country.name,
-            totalAid: country.totalAid,
-            aidIntensity: country.aidIntensity,
-            region: country.region,
-            isoCode: country.isoCode
-          },
-          geometry: {
-            type: 'Point',
-            coordinates: [parseFloat(country.longitude), parseFloat(country.latitude)]
-          }
-        }));
+        mapLoadedRef.current = true;
 
         map.addSource('aid-data', {
           type: 'geojson',
-          data: {
-            type: 'FeatureCollection',
-            features: countryFeatures
-          }
+          data: buildFeatureCollection(mapDataRef.current),
         });
 
-        // Add circle layer for aid visualization
         map.addLayer({
           id: 'aid-circles',
           type: 'circle',
           source: 'aid-data',
           paint: {
-            'circle-radius': [
-              'interpolate',
-              ['linear'],
-              ['get', 'aidIntensity'],
-              0, 5,
-              10, 30
-            ],
+            'circle-radius': ['interpolate', ['linear'], ['get', 'aidIntensity'], 0, 5, 10, 30],
             'circle-color': [
               'interpolate',
               ['linear'],
               ['get', 'aidIntensity'],
               0, '#e2e8f0',
-              2, '#3b82f6',
-              4, '#1d4ed8',
+              2, '#38bdf8',
+              4, '#2563eb',
               6, '#1e40af',
-              10, '#7c3aed'
+              10, '#7c3aed',
             ],
             'circle-stroke-color': '#ffffff',
             'circle-stroke-width': 2,
-            'circle-opacity': 0.8
-          }
+            'circle-opacity': 0.85,
+          },
         });
 
-        // Add click event for country selection
         map.on('click', 'aid-circles', (e: any) => {
-          const feature = e.features[0];
-          const countryData = mapData.find(c => c.name === feature.properties.name);
-          if (countryData) {
-            setSelectedCountry(countryData);
-          }
+          const feature = e.features?.[0];
+          if (!feature) return;
+          const countryData = mapDataRef.current.find((c) => c.name === feature.properties.name);
+          if (countryData) setSelectedCountry(countryData);
         });
 
-        // Change cursor on hover
         map.on('mouseenter', 'aid-circles', () => {
           map.getCanvas().style.cursor = 'pointer';
         });
-
         map.on('mouseleave', 'aid-circles', () => {
           map.getCanvas().style.cursor = '';
         });
@@ -159,7 +169,21 @@ export default function WorldMap() {
     };
 
     initMap();
+    return () => {
+      cancelled = true;
+    };
   }, [mapData]);
+
+  // Tear the map down when the component unmounts (prevents leaks/stacking).
+  useEffect(() => {
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        mapLoadedRef.current = false;
+      }
+    };
+  }, []);
 
 
 
@@ -308,7 +332,7 @@ export default function WorldMap() {
           {/* Map Container */}
           <div
             ref={mapRef}
-            className="relative h-[600px] overflow-hidden rounded-xl border border-border bg-secondary/40"
+            className="relative h-[380px] overflow-hidden rounded-xl border border-border bg-secondary/40 sm:h-[600px]"
           >
             {isLoading && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-secondary/40">
